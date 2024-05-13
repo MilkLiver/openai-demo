@@ -1,105 +1,86 @@
 package com.milkliver.openaidemo.controller;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatClient;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.Role;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.milkliver.openaidemo.ai.chat.OpenAiCall;
+import com.theokanning.openai.client.OpenAiApi;
+import com.theokanning.openai.messages.Message;
+import com.theokanning.openai.messages.MessageContent;
+import com.theokanning.openai.messages.MessageRequest;
+import com.theokanning.openai.runs.Run;
+import com.theokanning.openai.runs.RunCreateRequest;
+import com.theokanning.openai.service.OpenAiService;
+import com.theokanning.openai.threads.ThreadRequest;
+import com.theokanning.openai.threads.Thread;
+
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
 
 @Controller
 public class CallOpenaiController {
 	private static final Logger log = LoggerFactory.getLogger(CallOpenaiController.class);
 
-//	private final OpenAiChatClient chatClient = new OpenAiChatClient(
-//			new OpenAiApi("TOKEN"));
-
-	@ResponseBody
-	@RequestMapping(value = "/test")
-	private String test() {
-		return "testOwO";
-	}
+	@Autowired
+	OpenAiCall openAiCall;
 
 	@ResponseBody
 	@RequestMapping(value = "/openai_msg")
-	private String openai_msg(@RequestBody String message) {
-		System.out.println(message);
+//	private String openai_msg(@RequestHeader String apikey, @RequestBody String reqPayload) {
+	private String openai_msg(@RequestBody String reqPayload) {
+//		log.info("apikey: " + apikey);
+		log.info("reqPayload: " + reqPayload);
 
-//		StringBuilder execRes = new StringBuilder();
-//		String execLine;
-//		StringBuilder execStrSb = new StringBuilder();
-//		while ((execLine = request.getReader().readLine()) != null) {
-//			execStrSb.append(execLine);
-//		}
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map reqPayloadMap = null;
+		String res = null;
+		try {
+			reqPayloadMap = objectMapper.readValue(reqPayload, new TypeReference<Map>() {
+			});
 
-		OpenAiApi openAiApi = new OpenAiApi("Token");
+			if (reqPayloadMap.get("asst") == null || reqPayloadMap.get("asst").toString().trim().equals("")) {
+				return "asst is empty";
+			}
+			if (reqPayloadMap.get("model") == null || reqPayloadMap.get("model").toString().trim().equals("")) {
+				return "model is empty";
+			}
+			if (reqPayloadMap.get("query") == null || reqPayloadMap.get("query").toString().trim().equals("")) {
+				return "query is empty";
+			}
+			String asst = reqPayloadMap.get("asst").toString();
+			String model = reqPayloadMap.get("model").toString();
+			String query = reqPayloadMap.get("query").toString();
+			log.info("asst: " + asst);
+			log.info("model: " + model);
+			log.info("query: " + query);
 
-		OpenAiChatClient chatClient = new OpenAiChatClient(openAiApi);
+			res = openAiCall.callWithAssistant(asst, model, query);
 
-		ChatResponse response = chatClient.call(new Prompt(message));
-		return response.toString();
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement elem : e.getStackTrace()) {
+				log.error(elem.toString());
+			}
+			log.info(this.getClass().getName() + " error");
+			return e.getMessage();
+		}
 
-//		OpenAiChatOptions.builder()
-
-//		ChatResponse response = chatClient.call(
-//			    new Prompt(
-//			        "Generate the names of 5 famous pirates.",
-//			        OpenAiChatOptions.builder()
-//			            .withModel("gpt-4")
-//			            .withTemperature((float) 0.4)
-//			        .build()
-//			    ));
-//		return "testOwO2";
+		return res;
 	}
 
-	@ResponseBody
-	@RequestMapping(value = "/openai_msg2")
-	private String openai_msg2(@RequestBody String message) {
-		System.out.println(message);
-
-		OpenAiApi openAiApi = new OpenAiApi("Token");
-
-		ChatCompletionMessage chatCompletionMessage = new ChatCompletionMessage(message, Role.USER);
-
-		// Sync request
-		ResponseEntity<ChatCompletion> response = openAiApi
-				.chatCompletionEntity(new ChatCompletionRequest(List.of(chatCompletionMessage), "gpt-4", 0.8f, false));
-
-		return response.toString();
-	}
-
-	@ResponseBody
-	@RequestMapping(value = "/openai_msg3")
-	private String openai_msg3(@RequestBody String message) {
-		System.out.println(message);
-
-		OpenAiApi openAiApi = new OpenAiApi("Token");
-
-		OpenAiChatClient chatClient = new OpenAiChatClient(openAiApi);
-		
-		ChatCompletionMessage chatCompletionMessage = new ChatCompletionMessage(message, Role.USER);
-
-		Prompt prompt = new Prompt(message);
-
-		ChatResponse response = chatClient.call(prompt);
-//		ChatResponse response = chatClient.call(new Prompt(message));
-
-		return response.toString();
-	}
-	
 }
