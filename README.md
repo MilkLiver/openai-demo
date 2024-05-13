@@ -1,1 +1,1 @@
-# openai-sample
+# openai-demo
