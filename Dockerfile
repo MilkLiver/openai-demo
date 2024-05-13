@@ -1,5 +1,5 @@
 #======================== build container ========================
-FROM docker.io/library/3.8.5-openjdk-17 AS builder
+FROM docker.io/library/maven:3.8.5-openjdk-17 AS builder
 
 MAINTAINER milkliver
 #ARG uid=0
