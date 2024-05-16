@@ -17,7 +17,7 @@ on:
 
 env:
   # Use docker.io for Docker Hub if empty
-  PULL_IMAGE_REGISTRY: docker.io
+  PULL_IMAGE_REGISTRY: registry.access.redhat.com
   PUSH_IMAGE_REGISTRY: docker.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
