@@ -2,6 +2,7 @@ package com.milkliver.openaidemo.controller;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,9 +43,10 @@ public class CallOpenaiController {
 
 	@ResponseBody
 	@RequestMapping(value = "/openai_msg")
-//	private String openai_msg(@RequestHeader String apikey, @RequestBody String reqPayload) {
-	private String openai_msg(@RequestBody String reqPayload) {
-//		log.info("apikey: " + apikey);
+	private String openai_msg(@RequestHeader(name = "apikey", required = false) String apikey,
+			@RequestBody String reqPayload) {
+		log.info(this.getClass().getName() + " ...");
+		log.info("apikey: " + apikey);
 		log.info("reqPayload: " + reqPayload);
 
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -76,8 +79,36 @@ public class CallOpenaiController {
 			for (StackTraceElement elem : e.getStackTrace()) {
 				log.error(elem.toString());
 			}
-			log.info(this.getClass().getName() + " error");
+			log.error(this.getClass().getName() + " error");
 			return e.getMessage();
+		}
+		log.info(this.getClass().getName() + " finish");
+		return res;
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "/openaiListAsst", produces = "application/json")
+	private String openaiListAsst(@RequestHeader(name = "apikey", required = false) String apikey,
+			@RequestParam(name = "limit", required = false, defaultValue = "99") Integer limitNum) {
+		log.info(this.getClass().getName() + " ...");
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map resPayloadMap = new HashMap();
+		List<Map<String, Object>> asstList = new ArrayList<Map<String, Object>>();
+		String res = null;
+		try {
+			asstList = openAiCall.getAssistants(limitNum);
+			resPayloadMap.put("object", "list");
+			resPayloadMap.put("data", asstList);
+			res = objectMapper.writeValueAsString(resPayloadMap);
+			log.info(this.getClass().getName() + " finish");
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement elem : e.getStackTrace()) {
+				log.error(elem.toString());
+			}
+			log.error(this.getClass().getName() + " error");
+			return res;
 		}
 
 		return res;
