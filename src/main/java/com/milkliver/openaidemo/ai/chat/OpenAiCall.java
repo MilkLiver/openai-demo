@@ -81,7 +81,6 @@ public class OpenAiCall {
 		try {
 			OpenAiService service = new OpenAiService(OPENAI_TOKEN);
 
-			System.out.println("limitNum: " + limitNum);
 			ListSearchParameters openaiLsp = ListSearchParameters.builder().limit(limitNum.intValue()).build();
 
 			OpenAiResponse<Assistant> getAsstRes = service.listAssistants(openaiLsp);
