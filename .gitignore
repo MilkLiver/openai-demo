@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Dev Settings ###
+src/main/resources/configs/application-dev.yaml
+
 ### STS ###
 .apt_generated
 .classpath
