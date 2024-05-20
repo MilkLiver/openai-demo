@@ -5,7 +5,7 @@ target/
 !**/src/test/**/target/
 
 ### Dev Settings ###
-src/main/resources/configs/application-dev.yaml
+src/main/resources/configs/application-dev.properties
 
 ### STS ###
 .apt_generated
