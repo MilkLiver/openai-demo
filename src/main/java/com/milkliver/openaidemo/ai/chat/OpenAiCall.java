@@ -2,6 +2,7 @@ package com.milkliver.openaidemo.ai.chat;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theokanning.openai.ListSearchParameters;
+import com.theokanning.openai.OpenAiResponse;
+import com.theokanning.openai.assistants.Assistant;
+import com.theokanning.openai.assistants.Tool;
 import com.theokanning.openai.messages.Message;
 import com.theokanning.openai.messages.MessageContent;
 import com.theokanning.openai.messages.MessageRequest;
@@ -26,7 +31,7 @@ import com.theokanning.openai.threads.ThreadRequest;
 @Service
 public class OpenAiCall {
 	private static final Logger log = LoggerFactory.getLogger(OpenAiCall.class);
-	
+
 	@Value("${openai.token}")
 	String OPENAI_TOKEN;
 
@@ -64,8 +69,52 @@ public class OpenAiCall {
 			for (StackTraceElement elem : e.getStackTrace()) {
 				log.error(elem.toString());
 			}
-			log.info(this.getClass().getName() + " error");
+			log.error(this.getClass().getName() + " error");
 			return e.getMessage();
+		}
+
+	}
+
+	public List<Map<String, Object>> getAssistants(Integer limitNum) {
+		log.info(this.getClass().getName() + " ...");
+		List<Map<String, Object>> asstList = new ArrayList<Map<String, Object>>();
+		try {
+			OpenAiService service = new OpenAiService(OPENAI_TOKEN);
+
+			ListSearchParameters openaiLsp = ListSearchParameters.builder().limit(limitNum.intValue()).build();
+
+			OpenAiResponse<Assistant> getAsstRes = service.listAssistants(openaiLsp);
+			List<Assistant> resAsstList = getAsstRes.getData();
+			for (Assistant asst : resAsstList) {
+				Map asstMap = new HashMap();
+				asstMap.put("id", asst.getId());
+				asstMap.put("object", asst.getObject());
+				asstMap.put("createdAt", asst.getCreatedAt());
+				asstMap.put("name", asst.getName());
+				asstMap.put("description", asst.getDescription());
+				asstMap.put("instructions", asst.getInstructions());
+
+				List<Map<String, Object>> asstToolList = new ArrayList<Map<String, Object>>();
+				for (Tool tool : asst.getTools()) {
+					Map toolMap = new HashMap();
+					toolMap.put("type", tool.getType().name());
+					asstToolList.add(toolMap);
+				}
+				asstMap.put("tools", asstToolList);
+				asstMap.put("file_ids", asst.getFileIds());
+				asstMap.put("metadata", asst.getMetadata());
+				asstList.add(asstMap);
+			}
+
+			log.info(this.getClass().getName() + " finish");
+			return asstList;
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement elem : e.getStackTrace()) {
+				log.error(elem.toString());
+			}
+			log.error(this.getClass().getName() + " error");
+			return asstList;
 		}
 
 	}
