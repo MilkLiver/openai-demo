@@ -9,6 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -44,6 +45,30 @@ public class CallOpenaiController {
 
 	@Autowired
 	ChatAiRespProcessing chatAiRespProcessing;
+
+	@Value("${tag.name}")
+	String TAG_NAME;
+
+	@ResponseBody
+	@RequestMapping(value = "/test")
+	private String test() {
+		log.info(this.getClass().getName() + " ...");
+
+		try {
+
+			log.info("TAG_NAME: " + TAG_NAME + " this is test api ~");
+
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement elem : e.getStackTrace()) {
+				log.error(elem.toString());
+			}
+			log.error(this.getClass().getName() + " error");
+			return e.getMessage();
+		}
+		log.info(this.getClass().getName() + " finish");
+		return "TAG_NAME: " + TAG_NAME;
+	}
 
 	@ResponseBody
 	@RequestMapping(value = "/openai_msg")
