@@ -13,10 +13,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class MainConfiguration {
 
-	@Value("${server.port}")
+	@Value("${server.port:19528}")
 	String serverPort;
 
-	@Value("${server.http.port}")
+	@Value("${server.http.port:19527}")
 	String serverHttpPort;
 
 	// ===============================轉接HTTP至HTTPS用=====================================
