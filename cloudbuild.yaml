@@ -1,0 +1,31 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/github.com/milkliver/openai-demo:$TAG_NAME'
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'gcr.io/$PROJECT_ID/github.com/milkliver/openai-demo:$TAG_NAME'
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args:
+      - run
+      - deploy
+      - openai
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/github.com/milkliver/openai-demo:$TAG_NAME'
+      - >-
+        --service-account=openai-demo-cloudrun@apple-store-poc-420509.iam.gserviceaccount.com
+      - '--port=19527'
+      - '--set-env-vars=TAG_NAME=$TAG_NAME'
+      - '--set-secrets=OPENAI_TOKEN=OPENAI_TOKEN:latest'
+      - '--region'
+      - asia-east1
+    entrypoint: gcloud
+images:
+  - 'gcr.io/$PROJECT_ID/github.com/milkliver/openai-demo:$TAG_NAME'
+options:
+  logging: GCS_ONLY
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
