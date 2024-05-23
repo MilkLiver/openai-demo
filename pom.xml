@@ -35,6 +35,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!--
 		https://mvnrepository.com/artifact/com.theokanning.openai-gpt3-java/service -->
 		<dependency>
@@ -58,30 +63,6 @@
 			<artifactId>client</artifactId>
 			<version>0.18.2</version>
 		</dependency>
-
-
-		<!-- https://mvnrepository.com/artifact/io.springboot.ai/spring-ai-core -->
-		<dependency>
-			<groupId>io.springboot.ai</groupId>
-			<artifactId>spring-ai-core</artifactId>
-			<version>1.0.3</version>
-		</dependency>
-
-		<!--
-		https://mvnrepository.com/artifact/io.springboot.ai/spring-ai-openai -->
-		<dependency>
-			<groupId>io.springboot.ai</groupId>
-			<artifactId>spring-ai-openai</artifactId>
-			<version>1.0.3</version>
-		</dependency>
-
-		<!--
-		https://mvnrepository.com/artifact/io.springboot.ai/spring-ai-spring-boot-autoconfigure -->
-		<!--		<dependency>-->
-		<!--			<groupId>io.springboot.ai</groupId>-->
-		<!--			<artifactId>spring-ai-spring-boot-autoconfigure</artifactId>-->
-		<!--			<version>1.0.3</version>-->
-		<!--		</dependency>-->
 
 	</dependencies>
 
