@@ -127,6 +127,7 @@ public class CallOpenaiController {
 		String res = null;
 		try {
 			asstList = openAiCall.getAssistants(limitNum);
+			resPayloadMap.put("returnCode", "0000");
 			resPayloadMap.put("object", "list");
 			resPayloadMap.put("data", asstList);
 			res = objectMapper.writeValueAsString(resPayloadMap);
