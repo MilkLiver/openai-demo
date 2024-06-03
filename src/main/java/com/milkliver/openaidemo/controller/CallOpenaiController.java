@@ -253,7 +253,10 @@ public class CallOpenaiController {
 				log.info("model: " + model);
 				log.info("query: " + query);
 
-				res = openAiCall.callWithAssistant(asst, model, query);
+				String resStr = openAiCall.callWithAssistant(asst, model, query);
+				respPayloadMap.put("data", resStr);
+				res = objectMapper.writeValueAsString(respPayloadMap);
+
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
