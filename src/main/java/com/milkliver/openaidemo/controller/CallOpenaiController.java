@@ -255,6 +255,7 @@ public class CallOpenaiController {
 
 				String resStr = openAiCall.callWithAssistant(asst, model, query);
 				respPayloadMap.put("data", resStr);
+				respPayloadMap.put("returnCode", "0000");
 				res = objectMapper.writeValueAsString(respPayloadMap);
 
 			}
