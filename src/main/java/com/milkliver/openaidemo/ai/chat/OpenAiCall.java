@@ -91,6 +91,7 @@ public class OpenAiCall {
 				asstMap.put("object", asst.getObject());
 				asstMap.put("createdAt", asst.getCreatedAt());
 				asstMap.put("name", asst.getName());
+				asstMap.put("model", asst.getModel());
 				asstMap.put("description", asst.getDescription());
 				asstMap.put("instructions", asst.getInstructions());
 

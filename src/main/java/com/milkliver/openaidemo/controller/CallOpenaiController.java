@@ -49,6 +49,7 @@ public class CallOpenaiController {
 	@Value("${tag.name}")
 	String TAG_NAME;
 
+	// just for test
 	@ResponseBody
 	@RequestMapping(value = "/test")
 	private String test() {
@@ -70,6 +71,7 @@ public class CallOpenaiController {
 		return "TAG_NAME: " + TAG_NAME;
 	}
 
+	// ask openai and return message
 	@ResponseBody
 	@RequestMapping(value = "/openai_msg")
 	private String openai_msg(@RequestHeader(name = "apikey", required = false) String apikey,
@@ -115,6 +117,7 @@ public class CallOpenaiController {
 		return res;
 	}
 
+	// return openai assistant list
 	@ResponseBody
 	@RequestMapping(value = "/openaiListAsst", produces = "application/json")
 	private String openaiListAsst(@RequestHeader(name = "apikey", required = false) String apikey,
@@ -127,6 +130,7 @@ public class CallOpenaiController {
 		String res = null;
 		try {
 			asstList = openAiCall.getAssistants(limitNum);
+			resPayloadMap.put("returnCode", "0000");
 			resPayloadMap.put("object", "list");
 			resPayloadMap.put("data", asstList);
 			res = objectMapper.writeValueAsString(resPayloadMap);
@@ -143,6 +147,7 @@ public class CallOpenaiController {
 		return res;
 	}
 
+	// return input string tags
 	@ResponseBody
 	@RequestMapping(value = "/openTags", produces = "application/json")
 	private String openTags(@RequestHeader(name = "apikey", required = false) String apikey,
@@ -155,7 +160,7 @@ public class CallOpenaiController {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map reqPayloadMap = null;
 		Map respPayloadMap = new HashMap();
-		respPayloadMap.put("data", new HashMap());
+//		respPayloadMap.put("data", new HashMap());
 		String res = null;
 		try {
 			reqPayloadMap = objectMapper.readValue(reqPayload, new TypeReference<Map>() {
@@ -197,7 +202,7 @@ public class CallOpenaiController {
 			respPayloadMap.put("returnCode", "E999");
 			log.error(this.getClass().getName() + " error");
 			try {
-				System.out.println("respPayloadMap: " + respPayloadMap.toString());
+				log.info("respPayloadMap: " + respPayloadMap.toString());
 				res = objectMapper.writeValueAsString(respPayloadMap);
 			} catch (JsonProcessingException e1) {
 				log.error(e1.getMessage());
@@ -206,6 +211,66 @@ public class CallOpenaiController {
 		}
 		log.info(this.getClass().getName() + " finish");
 
+		return res;
+	}
+
+	// return tags but string format
+	@ResponseBody
+	@RequestMapping(value = "/openAnswer", produces = "application/json")
+	private String openAnswer(@RequestHeader(name = "apikey", required = false) String apikey,
+			@RequestBody String reqPayload) {
+
+		log.info(this.getClass().getName() + " ...");
+		log.info("apikey: " + apikey);
+		log.info("reqPayload: " + reqPayload);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map reqPayloadMap = null;
+		Map respPayloadMap = new HashMap();
+//		respPayloadMap.put("data", new HashMap());
+		String res = null;
+		try {
+			reqPayloadMap = objectMapper.readValue(reqPayload, new TypeReference<Map>() {
+			});
+
+			if (reqPayloadMap.get("asst") == null || reqPayloadMap.get("asst").toString().trim().equals("")) {
+				respPayloadMap.put("returnCode", "E998");
+				res = objectMapper.writeValueAsString(respPayloadMap);
+//				return "asst is empty";
+			} else if (reqPayloadMap.get("model") == null || reqPayloadMap.get("model").toString().trim().equals("")) {
+				respPayloadMap.put("returnCode", "E998");
+				res = objectMapper.writeValueAsString(respPayloadMap);
+//				return "model is empty";
+			} else if (reqPayloadMap.get("query") == null || reqPayloadMap.get("query").toString().trim().equals("")) {
+				respPayloadMap.put("returnCode", "E998");
+				res = objectMapper.writeValueAsString(respPayloadMap);
+//				return "query is empty";
+			} else {
+				String asst = reqPayloadMap.get("asst").toString();
+				String model = reqPayloadMap.get("model").toString();
+				String query = reqPayloadMap.get("query").toString();
+				log.info("asst: " + asst);
+				log.info("model: " + model);
+				log.info("query: " + query);
+
+				res = openAiCall.callWithAssistant(asst, model, query);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement elem : e.getStackTrace()) {
+				log.error(elem.toString());
+			}
+			respPayloadMap.put("returnCode", "E999");
+			log.error(this.getClass().getName() + " error");
+			try {
+				log.info("respPayloadMap: " + respPayloadMap.toString());
+				res = objectMapper.writeValueAsString(respPayloadMap);
+			} catch (JsonProcessingException e1) {
+				log.error(e1.getMessage());
+				return "server error E999";
+			}
+		}
+		log.info(this.getClass().getName() + " finish");
 		return res;
 	}
 
