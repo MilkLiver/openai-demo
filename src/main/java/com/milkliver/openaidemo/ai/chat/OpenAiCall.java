@@ -1,20 +1,5 @@
 package com.milkliver.openaidemo.ai.chat;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.ListSearchParameters;
 import com.theokanning.openai.OpenAiResponse;
 import com.theokanning.openai.assistants.Assistant;
@@ -22,11 +7,22 @@ import com.theokanning.openai.assistants.Tool;
 import com.theokanning.openai.messages.Message;
 import com.theokanning.openai.messages.MessageContent;
 import com.theokanning.openai.messages.MessageRequest;
-import com.theokanning.openai.runs.Run;
 import com.theokanning.openai.runs.RunCreateRequest;
 import com.theokanning.openai.service.OpenAiService;
 import com.theokanning.openai.threads.Thread;
 import com.theokanning.openai.threads.ThreadRequest;
+
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
 
 @Service
 public class OpenAiCall {
@@ -50,19 +46,72 @@ public class OpenAiCall {
 
 			RunCreateRequest runcreq = RunCreateRequest.builder().assistantId(asst).model(model).build();
 
-			Run run = service.createRun(th.getId(), runcreq);
+			// threads/thread_abc123/runs
+			URL url = new URL("https://api.openai.com/v1/threads/" + th.getId() + "/runs");
+			HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+			httpConn.setRequestMethod("POST");
+
+			httpConn.setRequestProperty("Authorization", "Bearer " + OPENAI_TOKEN);
+			httpConn.setRequestProperty("Content-Type", "application/json");
+			httpConn.setRequestProperty("OpenAI-Beta", "assistants=v2");
+
+			httpConn.setDoOutput(true);
+			OutputStreamWriter writer = new OutputStreamWriter(httpConn.getOutputStream());
+			writer.write("{\n    \"assistant_id\": \"" + asst + "\"\n  }");
+			writer.flush();
+			writer.close();
+			httpConn.getOutputStream().close();
+
+			InputStream responseStream = httpConn.getResponseCode() / 100 == 2 ? httpConn.getInputStream()
+					: httpConn.getErrorStream();
+			Scanner s = new Scanner(responseStream).useDelimiter("\\A");
+			String response = s.hasNext() ? s.next() : "";
+			log.info(response);
+			JSONObject jsonObject = new JSONObject(response);
+
+			var runId = jsonObject.get("id");
+			var runCompletedAt = jsonObject.get("completed_at");
+
+			// Run run = service.createRun(th.getId(), runcreq);
+
+			URL url2 = new URL("https://api.openai.com/v1/threads/" + th.getId());
+			HttpURLConnection httpConn2 = (HttpURLConnection) url2.openConnection();
+			httpConn2.setRequestMethod("GET");
+
+			httpConn2.setRequestProperty("Content-Type", "application/json");
+			httpConn2.setRequestProperty("Authorization", "Bearer " + OPENAI_TOKEN);
+			httpConn2.setRequestProperty("OpenAI-Beta", "assistants=v2");
+
+			InputStream responseStream2 = httpConn2.getResponseCode() / 100 == 2 ? httpConn2.getInputStream()
+					: httpConn2.getErrorStream();
+			Scanner s2 = new Scanner(responseStream2).useDelimiter("\\A");
+			String response2 = s2.hasNext() ? s2.next() : "";
+			log.info(response2);
 
 			Thread resth = service.retrieveThread(th.getId());
-			while (run.getCompletedAt() == null) {
+			while (runCompletedAt == JSONObject.NULL) {
 				java.lang.Thread.sleep(1000);
-				run = service.retrieveRun(th.getId(), run.getId());
+				URL url3 = new URL("https://api.openai.com/v1/threads/" + th.getId() + "/runs/" + runId);
+				HttpURLConnection httpConn3 = (HttpURLConnection) url3.openConnection();
+				httpConn3.setRequestMethod("GET");
+				httpConn3.setRequestProperty("Authorization", "Bearer " + OPENAI_TOKEN);
+				httpConn3.setRequestProperty("OpenAI-Beta", "assistants=v2");
+				InputStream responseStream3 = httpConn3.getResponseCode() / 100 == 2 ? httpConn3.getInputStream()
+						: httpConn3.getErrorStream();
+				Scanner s3 = new Scanner(responseStream3).useDelimiter("\\A");
+				String response3 = s3.hasNext() ? s3.next() : "";
+				JSONObject jsonObject3 = new JSONObject(response3);
+				if (jsonObject3.has("completed_at")) {
+					runCompletedAt = jsonObject3.get("completed_at");
+				}
 			}
-			log.info(run.getCompletedAt().toString());
+//			log.info(run.getCompletedAt().toString());
 
 			List<Message> thMsgsList = service.listMessages(resth.getId()).getData();
 
 			MessageContent resMsgCont = (MessageContent) thMsgsList.get(0).getContent().get(0);
 			log.info(this.getClass().getName() + " finish");
+			service.shutdownExecutor();
 			return resMsgCont.getText().getValue();
 		} catch (Exception e) {
 			log.error(e.getMessage());
@@ -117,7 +166,5 @@ public class OpenAiCall {
 			log.error(this.getClass().getName() + " error");
 			return asstList;
 		}
-
 	}
-
 }
