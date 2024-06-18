@@ -120,10 +120,20 @@ public class OpenAiCall {
 			if (type != null && type.equals(openaiReturnType.TAG) || type.equals(openaiReturnType.MSG)) {
 				return resMsgCont.getText().getValue();
 			} else {
-				// 轉json
-				return resMsgCont.getText().getValue().replace("【4:0†source】", "").replace("【4:1†source】", "")
-						.replace("【4:2†source】", "").replace("【4:3†source】", "").replace("【4:4†source】", "")
-						.replace("【4:5†source】", "");
+				String result = "";
+				// 判斷是否為JSON
+				try {
+					JSONObject resJson = new JSONObject(resMsgCont.getText().getValue());
+					result = resJson.get("response").toString();
+				} catch (Exception e) {
+					result = resMsgCont.getText().getValue();
+				}
+				result = result.replace("【4:0†source】", "").replace("【4:1†source】", "").replace("【4:2†source】", "")
+						.replace("【4:3†source】", "").replace("【4:4†source】", "").replace("【4:5†source】", "")
+						.replace("【4:6†source】", "").replace("【4:7†source】", "").replace("【4:8†source】", "")
+						.replace("【4:9†source】", "").replace("【4:10†source】", "").replace("【4:11†source】", "")
+						.replace("【4:12†source】", "");
+				return result;
 			}
 
 		} catch (Exception e) {
