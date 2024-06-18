@@ -31,7 +31,11 @@ public class OpenAiCall {
 	@Value("${openai.token}")
 	String OPENAI_TOKEN;
 
-	public String callWithAssistant(String asst, String model, String query) {
+	public static enum openaiReturnType {
+		TAG, MSG, JSONMSG
+	}
+
+	public String callWithAssistant(openaiReturnType type, String asst, String model, String query) {
 		log.info(this.getClass().getName() + " ...");
 		try {
 			OpenAiService service = new OpenAiService(OPENAI_TOKEN);
@@ -112,7 +116,26 @@ public class OpenAiCall {
 			MessageContent resMsgCont = (MessageContent) thMsgsList.get(0).getContent().get(0);
 			log.info(this.getClass().getName() + " finish");
 			service.shutdownExecutor();
-			return resMsgCont.getText().getValue();
+
+			if (type != null && type.equals(openaiReturnType.TAG) || type.equals(openaiReturnType.MSG)) {
+				return resMsgCont.getText().getValue();
+			} else {
+				String result = "";
+				// 判斷是否為JSON
+				try {
+					JSONObject resJson = new JSONObject(resMsgCont.getText().getValue());
+					result = resJson.get("response").toString();
+				} catch (Exception e) {
+					result = resMsgCont.getText().getValue();
+				}
+				result = result.replace("【4:0†source】", "").replace("【4:1†source】", "").replace("【4:2†source】", "")
+						.replace("【4:3†source】", "").replace("【4:4†source】", "").replace("【4:5†source】", "")
+						.replace("【4:6†source】", "").replace("【4:7†source】", "").replace("【4:8†source】", "")
+						.replace("【4:9†source】", "").replace("【4:10†source】", "").replace("【4:11†source】", "")
+						.replace("【4:12†source】", "");
+				return result;
+			}
+
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			for (StackTraceElement elem : e.getStackTrace()) {

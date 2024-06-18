@@ -25,7 +25,7 @@ public class ChatAiRespProcessing {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 
-			String tagsStr = openAiCall.callWithAssistant(asst, model, query);
+			String tagsStr = openAiCall.callWithAssistant(OpenAiCall.openaiReturnType.TAG ,asst, model, query);
 
 			Map<String, List<String>> tagsMap = new HashMap<String, List<String>>();
 
