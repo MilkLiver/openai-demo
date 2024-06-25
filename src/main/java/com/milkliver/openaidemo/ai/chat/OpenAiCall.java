@@ -115,6 +115,7 @@ public class OpenAiCall {
 
 			MessageContent resMsgCont = (MessageContent) thMsgsList.get(0).getContent().get(0);
 			log.info(this.getClass().getName() + " finish");
+			
 			service.shutdownExecutor();
 
 			if (type != null && type.equals(openaiReturnType.TAG) || type.equals(openaiReturnType.MSG)) {
@@ -123,7 +124,9 @@ public class OpenAiCall {
 				String result = "";
 				// 判斷是否為JSON
 				try {
-					JSONObject resJson = new JSONObject(resMsgCont.getText().getValue());
+					JSONObject resJson = new JSONObject(resMsgCont.getText().getValue().replace("{\\n", "{")
+							.replace("\\n}", "}").replace("```json\\n", "").replace("\\n```", "").replace("```json", "")
+							.replace("```", ""));
 					result = resJson.get("response").toString();
 				} catch (Exception e) {
 					result = resMsgCont.getText().getValue();
